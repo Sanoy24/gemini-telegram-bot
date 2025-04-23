@@ -16,8 +16,10 @@ httptools==0.6.4
 httpx==0.28.1
 idna==3.10
 Jinja2==3.1.6
+Markdown==3.8
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
+md2tgmd==0.3.10
 mdurl==0.1.2
 pyasn1==0.6.1
 pyasn1_modules==0.4.2
