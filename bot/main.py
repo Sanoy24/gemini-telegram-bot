@@ -18,7 +18,7 @@ bot.
 import logging
 from bot import load_config
 
-from telegram import ForceReply, Update
+from telegram import ForceReply, Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import (
     Application,
@@ -26,6 +26,7 @@ from telegram.ext import (
     ContextTypes,
     MessageHandler,
     filters,
+    CallbackQueryHandler,
 )
 import re
 from bot.core import gemini_client
@@ -149,6 +150,54 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await context.bot.send_message(chat_id=update.effective_chat.id, text=chunk)
 
 
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Parses the CallbackQuery and updates the message text."""
+
+    query = update.callback_query
+
+    # CallbackQueries need to be answered, even if no notification to the user is needed
+
+    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+
+    await query.answer()
+
+    await query.edit_message_text(text=f"Selected option: {query.data}")
+
+
+async def model(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    keyboard = [
+        [
+            InlineKeyboardButton("  Prompt  ", callback_data=1),
+            InlineKeyboardButton("  Images  ", callback_data=2),
+        ],
+        [
+            InlineKeyboardButton("  ✅ 5 seconds    ", callback_data=1),
+            InlineKeyboardButton("  option-2", callback_data=2),
+        ],
+        [
+            InlineKeyboardButton("  ✅ Version 1.6  ", callback_data=1),
+            InlineKeyboardButton("  option-2    ", callback_data=2),
+        ],
+        [
+            InlineKeyboardButton("  ✅ 1:1  ", callback_data=1),
+            InlineKeyboardButton("  16:9    ", callback_data=2),
+            InlineKeyboardButton("  9:16    ", callback_data=2),
+        ],
+        [InlineKeyboardButton(" ✖️ Cancel Generation    ", callback_data=3)],
+        [InlineKeyboardButton(" 🎥 Start Generation", callback_data=3)],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text(
+        "please choose saadsdsadsad s dsa  dasdsadsadsadsadsad asdsadsadsadsadsa  adasdsadsadsadsdsadasd   dasdsadsadsa:",
+        reply_markup=reply_markup,
+    )
+
+
+async def ask(update: Update, contect: ContextTypes.DEFAULT_TYPE):
+    pass
+
+
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
@@ -157,18 +206,20 @@ def main() -> None:
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
+    application.add_handler(CommandHandler("models", model))
+    application.add_handler(CallbackQueryHandler(button))
 
     # on non command i.e message - echo the message on Telegram
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
 
     # Run the bot until the user presses Ctrl-C
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
-    # application.run_webhook(
-    #     listen="0.0.0.0",
-    #     port=8080,
-    #     webhook_url=load_config.web_hook_url,
-    #     allowed_updates=Update.ALL_TYPES,
-    # )
+    # application.run_polling(allowed_updates=Update.ALL_TYPES)
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=8080,
+        webhook_url=load_config.web_hook_url,
+        allowed_updates=Update.ALL_TYPES,
+    )
 
 
 if __name__ == "__main__":
